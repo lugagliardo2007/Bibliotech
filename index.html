@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bibliotech - Gestión de Equipos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#0d1b2a;--navy2:#1b2d42;--gold:#c9a84c;--cream:#f5f0e8;
+      --white:#fff;--gray:#6b7a8d;--light:#eef1f5;
+      --red:#c0392b;--green:#1a7a4a;--blue:#1a56db;
+    }
+    body{font-family:'Source Sans 3',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh}
+
+    #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);position:relative;overflow:hidden}
+    #login-screen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(201,168,76,.06) 60px),repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(201,168,76,.06) 60px)}
+    .login-card{position:relative;z-index:1;background:var(--white);border-radius:2px;width:440px;box-shadow:0 24px 64px rgba(0,0,0,.4);overflow:hidden;animation:up .5s ease both}
+    @keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .lh{background:var(--navy2);padding:36px 40px 28px;border-bottom:3px solid var(--gold)}
+    .lh .badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);padding:3px 10px;margin-bottom:14px}
+    .lh h1{font-family:'Playfair Display',serif;font-size:28px;color:var(--white)}
+    .lh p{color:rgba(255,255,255,.5);font-size:13px;margin-top:6px}
+    .lb{padding:36px 40px}
+    .lb label{display:block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:6px}
+    .lb input{width:100%;border:1.5px solid #dde1e7;border-radius:2px;padding:11px 14px;font-family:'Source Sans 3',sans-serif;font-size:14px;color:var(--navy);background:var(--light);transition:border-color .2s;margin-bottom:18px}
+    .lb input:focus{outline:none;border-color:var(--gold);background:var(--white)}
+    .btn-login{width:100%;background:var(--navy);color:var(--white);border:none;border-radius:2px;padding:13px;font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:background .2s}
+    .btn-login::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--gold)}
+    .btn-login:hover{background:var(--navy2)}
+    .hint{margin-top:20px;background:var(--light);border-left:3px solid var(--gold);padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.9}
+    .hint b{color:var(--navy)}
+    #lerr{display:none;color:var(--red);font-size:12px;margin-top:-10px;margin-bottom:14px}
+
+    #app{display:none;min-height:100vh;flex-direction:column}
+    header{background:var(--navy);border-bottom:3px solid var(--gold);display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;position:sticky;top:0;z-index:100}
+    .logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--white)}
+    .logo span{color:var(--gold)}
+    nav{display:flex;gap:4px}
+    nav button{background:none;border:none;color:rgba(255,255,255,.55);font-family:'Source Sans 3',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;cursor:pointer;border-radius:2px;transition:color .2s,background .2s}
+    nav button:hover{color:var(--white);background:rgba(255,255,255,.06)}
+    nav button.active{color:var(--gold);background:rgba(201,168,76,.1)}
+    .hr{display:flex;align-items:center;gap:14px}
+    .utag{font-size:12px;color:rgba(255,255,255,.5)}
+    .utag b{color:var(--gold)}
+    .btn-logout{background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;cursor:pointer;border-radius:2px;transition:all .2s;font-family:'Source Sans 3',sans-serif}
+    .btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+    main{flex:1;padding:40px;max-width:1100px;margin:0 auto;width:100%}
+    .panel{animation:up .3s ease both}
+    .stitle{font-family:'Playfair Display',serif;font-size:26px;color:var(--navy);margin-bottom:4px}
+    .ssub{font-size:13px;color:var(--gray);margin-bottom:32px}
+
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+    .sc{background:var(--white);border:1px solid #e2e6eb;border-top:3px solid var(--gold);padding:22px 24px;border-radius:2px}
+    .sc .num{font-family:'Playfair Display',serif;font-size:36px;color:var(--navy);line-height:1}
+    .sc .lbl{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);margin-top:6px}
+
+    .egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+    .ecard{background:var(--white);border:1px solid #e2e6eb;border-radius:2px;padding:20px;transition:box-shadow .2s,transform .2s}
+    .ecard:hover{box-shadow:0 4px 24px rgba(13,27,42,.12);transform:translateY(-2px)}
+    .eico{font-size:28px;margin-bottom:10px}
+    .ename{font-family:'Playfair Display',serif;font-size:16px;color:var(--navy)}
+    .eid{font-size:11px;color:var(--gray);margin-bottom:14px}
+    .eact{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+
+    .bs{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:1px}
+    .bd{background:#e6f4ee;color:var(--green)}
+    .bo2{background:#fff0e0;color:#b05a00}
+    .bf{background:#fdecea;color:var(--red)}
+    .bac{background:#e6f4ee;color:var(--green)}
+    .bre{background:#fdecea;color:var(--red)}
+    .ben{background:#e8f0fe;color:var(--blue)}
+
+    .esel{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-top:6px}
+    .eci{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #dde1e7;border-radius:2px;background:var(--light);cursor:pointer;transition:border-color .2s,background .2s;user-select:none}
+    .eci:hover{border-color:var(--gold)}
+    .eci.sel{border-color:var(--gold);background:#fdf8ee}
+    .eci input{accent-color:var(--gold);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+    .ein{font-size:13px;font-weight:600;color:var(--navy)}
+    .eii{font-size:11px;color:var(--gray)}
+
+    /* BOTONES ESTADO — todos iguales, el activo tiene borde */
+    .bsm{font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;padding:6px 12px;border-radius:2px;border:2px solid transparent;cursor:pointer;transition:opacity .2s,border-color .2s;background:var(--navy);color:var(--white)}
+    .bsm:hover{opacity:.8}
+    .bsm.act{border-color:var(--gold)}
+
+    .fcard{background:var(--white);border:1px solid #e2e6eb;border-radius:2px;padding:32px 36px;max-width:680px}
+    .fcard h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid #e8eaed}
+    .fr{margin-bottom:18px}
+    .fr label{display:block;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray);margin-bottom:6px}
+    .fr input,.fr select,.fr textarea{width:100%;border:1.5px solid #dde1e7;border-radius:2px;padding:10px 14px;font-family:'Source Sans 3',sans-serif;font-size:14px;color:var(--navy);background:var(--light);transition:border-color .2s}
+    .fr textarea{resize:vertical;min-height:80px}
+    .fr input:focus,.fr select:focus,.fr textarea:focus{outline:none;border-color:var(--gold);background:var(--white)}
+    .bsub{background:var(--navy);color:var(--white);border:none;padding:12px 28px;font-family:'Source Sans 3',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:2px;border-bottom:3px solid var(--gold);transition:opacity .2s}
+    .bsub:hover{opacity:.85}
+
+    .tw{background:var(--white);border:1px solid #e2e6eb;border-radius:2px;overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:580px}
+    thead{background:var(--navy)}
+    thead th{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);padding:14px 20px;text-align:left;white-space:nowrap}
+    tbody tr{border-bottom:1px solid #eef0f3;transition:background .15s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:var(--light)}
+    tbody td{padding:14px 20px;font-size:14px;color:var(--navy);vertical-align:top}
+    .tsub{font-size:11px;color:var(--gray);margin-top:3px}
+    .ba2{display:flex;gap:6px;flex-wrap:wrap}
+    .bacc{background:#e6f4ee;color:var(--green);border:none;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-radius:2px;cursor:pointer}
+    .brej{background:#fdecea;color:var(--red);border:none;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-radius:2px;cursor:pointer}
+    .bdel{background:#e8f0fe;color:var(--blue);border:none;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-radius:2px;cursor:pointer}
+    .bacc:hover,.brej:hover,.bdel:hover{opacity:.8}
+
+    .hlist{display:flex;flex-direction:column;gap:16px}
+    .hcard{background:var(--white);border:1px solid #e2e6eb;border-left:4px solid var(--gold);border-radius:2px;padding:20px 24px}
+    .hcard.ep{border-left-color:#b05a00}
+    .hcard.ea{border-left-color:var(--green)}
+    .hcard.er{border-left-color:var(--red)}
+    .hcard.ee{border-left-color:var(--blue)}
+    .hctop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+    .hceqs{font-family:'Playfair Display',serif;font-size:16px;color:var(--navy)}
+    .hcmeta{font-size:12px;color:var(--gray);margin-top:4px}
+    .hcobs{font-size:13px;color:var(--gray);margin-top:10px;font-style:italic}
+
+    #toast{position:fixed;bottom:32px;right:32px;background:var(--navy);color:var(--white);padding:14px 22px;border-radius:2px;border-left:4px solid var(--gold);font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,.25);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:9999;max-width:320px}
+    #toast.show{transform:translateY(0);opacity:1}
+
+    .empty{text-align:center;padding:60px 20px;color:var(--gray)}
+    .empty .ei{font-size:40px;margin-bottom:12px}
+    .empty p{font-size:14px}
+
+    @media(max-width:768px){
+      header{padding:0 16px;flex-wrap:wrap;height:auto;gap:8px;padding-block:12px}
+      nav button{font-size:10px;padding:6px 10px}
+      main{padding:20px 16px}
+      .stats{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="lh">
+      <div class="badge">Sistema Escolar</div>
+      <h1>Bibliotech</h1>
+      <p>Gestión de préstamos de equipos tecnológicos</p>
+    </div>
+    <div class="lb">
+      <label>Usuario</label>
+      <input id="inp-u" type="text" placeholder="Ingresá tu usuario" autocomplete="off"/>
+      <label>Contraseña</label>
+      <input id="inp-p" type="password" placeholder="••••••••"/>
+      <div id="lerr">❌ Usuario o contraseña incorrectos.</div>
+      <button class="btn-login" onclick="doLogin()">Ingresar al sistema</button>
+      <div class="hint">
+        <b>Docente:</b> docente / 1234<br>
+        <b>Bibliotecario:</b> biblio / 1234
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="logo">Biblio<span>tech</span></div>
+    <nav id="nav"></nav>
+    <div class="hr">
+      <div class="utag">Rol: <b id="ulbl"></b></div>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </header>
+  <main id="mc"></main>
+</div>
+<div id="toast"></div>
+
+<script>
+const DATA = {
+  equipos: [
+    {id:'NB-01',tipo:'notebook',nombre:'Notebook 01',estado:'disponible'},
+    {id:'NB-02',tipo:'notebook',nombre:'Notebook 02',estado:'disponible'},
+    {id:'NB-03',tipo:'notebook',nombre:'Notebook 03',estado:'ocupado'},
+    {id:'NB-04',tipo:'notebook',nombre:'Notebook 04',estado:'fallo'},
+    {id:'NB-05',tipo:'notebook',nombre:'Notebook 05',estado:'disponible'},
+    {id:'TB-01',tipo:'tablero', nombre:'Tablero 01', estado:'disponible'},
+    {id:'TB-02',tipo:'tablero', nombre:'Tablero 02', estado:'ocupado'},
+    {id:'TB-03',tipo:'tablero', nombre:'Tablero 03', estado:'disponible'},
+  ],
+  pedidos:  [],
+  reportes: []
+};
+
+const USERS = {
+  docente:{pass:'1234',role:'docente',name:'Docente'},
+  biblio: {pass:'1234',role:'biblio', name:'Bibliotecario'}
+};
+
+const FALLOS = {
+  notebook: [
+    'No enciende',
+    'Pantalla dañada o rota',
+    'Teclado no funciona',
+    'Trackpad no responde',
+    'No conecta al WiFi',
+    'Puerto USB no funciona',
+    'Problema de software / sistema',
+    'Batería no carga',
+    'Se apaga sola',
+    'Otro'
+  ],
+  tablero: [
+    'Atril roto o doblado',
+    'Hilos sueltos o cortados',
+    'Tornillos faltantes o flojos',
+    'Riel o guía dañada',
+    'Superficie rayada o golpeada',
+    'Fijador de hoja roto',
+    'Patas inestables',
+    'Bisagra dañada',
+    'Otro'
+  ]
+};
+
+let currentUser = null;
+
+function doLogin(){
+  const u = document.getElementById('inp-u').value.trim();
+  const p = document.getElementById('inp-p').value.trim();
+  const err = document.getElementById('lerr');
+  if(USERS[u] && USERS[u].pass===p){
+    err.style.display='none';
+    currentUser={...USERS[u],username:u};
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    applyRole();
+  } else {
+    err.style.display='block';
+  }
+}
+document.getElementById('inp-p').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('inp-u').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('inp-p').value='';
+  document.getElementById('inp-u').value='';
+}
+
+function applyRole(){
+  document.getElementById('ulbl').textContent = currentUser.name;
+  buildNav();
+  showPanel(currentUser.role==='docente' ? 'disponibilidad' : 'pedidos');
+}
+
+const TABS={
+  docente:[
+    {id:'disponibilidad',label:'Disponibilidad'},
+    {id:'pedir',         label:'Hacer pedido'},
+    {id:'reportar',      label:'Reportar fallo'},
+    {id:'historial',     label:'Mis pedidos'},
+  ],
+  biblio:[
+    {id:'pedidos',  label:'Pedidos recibidos'},
+    {id:'reportes', label:'Reportes de fallos'},
+    {id:'equipos',  label:'Gestión de equipos'},
+  ]
+};
+
+function buildNav(){
+  const nav=document.getElementById('nav');
+  nav.innerHTML='';
+  TABS[currentUser.role].forEach(t=>{
+    const b=document.createElement('button');
+    b.textContent=t.label;
+    b.dataset.id=t.id;
+    b.onclick=()=>showPanel(t.id);
+    nav.appendChild(b);
+  });
+}
+
+function showPanel(id){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.id===id));
+  const mc=document.getElementById('mc');
+  mc.innerHTML='';
+  const el=document.createElement('div');
+  el.className='panel';
+  PANELS[id](el);
+  mc.appendChild(el);
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function ico(tipo){return tipo==='notebook'?'💻':'📋'}
+
+function beq(estado){
+  const c={disponible:'bd',ocupado:'bo2',fallo:'bf'};
+  const l={disponible:'Disponible',ocupado:'En uso',fallo:'Con fallo'};
+  return `<span class="bs ${c[estado]||'bo2'}">${l[estado]||estado}</span>`;
+}
+
+function bped(estado){
+  const c={pendiente:'bo2',aceptado:'bac',rechazado:'bre',entregado:'ben'};
+  const l={pendiente:'En espera',aceptado:'Aceptado',rechazado:'Rechazado',entregado:'Entregado'};
+  return `<span class="bs ${c[estado]||'bo2'}">${l[estado]||estado}</span>`;
+}
+
+function fmt(s){
+  if(!s)return'—';
+  const d=new Date(s);
+  return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function stats(){
+  return{
+    total:DATA.equipos.length,
+    disp: DATA.equipos.filter(e=>e.estado==='disponible').length,
+    ocup: DATA.equipos.filter(e=>e.estado==='ocupado').length,
+    fall: DATA.equipos.filter(e=>e.estado==='fallo').length,
+  };
+}
+
+const PANELS={
+
+  disponibilidad(el){
+    const s=stats();
+    el.innerHTML=`
+      <div class="stitle">Disponibilidad de Equipos</div>
+      <div class="ssub">Estado actual de todos los equipos en tiempo real.</div>
+      <div class="stats">
+        <div class="sc"><div class="num">${s.total}</div><div class="lbl">Total</div></div>
+        <div class="sc"><div class="num">${s.disp}</div><div class="lbl">Disponibles</div></div>
+        <div class="sc"><div class="num">${s.ocup}</div><div class="lbl">En uso</div></div>
+        <div class="sc"><div class="num">${s.fall}</div><div class="lbl">Con fallo</div></div>
+      </div>
+      <div class="egrid">
+        ${DATA.equipos.map(e=>`
+          <div class="ecard">
+            <div class="eico">${ico(e.tipo)}</div>
+            <div class="ename">${e.nombre}</div>
+            <div class="eid">${e.id} · ${e.tipo}</div>
+            ${beq(e.estado)}
+          </div>`).join('')}
+      </div>`;
+  },
+
+  pedir(el){
+    const disp=DATA.equipos.filter(e=>e.estado==='disponible');
+    el.innerHTML=`
+      <div class="stitle">Hacer un Pedido</div>
+      <div class="ssub">Seleccioná uno o más equipos disponibles. El bibliotecario recibirá la solicitud.</div>
+      <div class="fcard" style="max-width:720px">
+        <h3>Solicitud de equipos</h3>
+        <div class="fr"><label>Tu nombre</label><input id="fn" type="text" placeholder="Nombre completo del docente"/></div>
+        <div class="fr"><label>Aula</label><input id="fa" type="text" placeholder="Ej: Aula 3B, Laboratorio..."/></div>
+        <div class="fr">
+          <label>Equipos disponibles — seleccioná los que necesitás</label>
+          ${disp.length===0
+            ?`<div style="padding:14px;background:var(--light);border-radius:2px;color:var(--gray);font-size:13px;">⚠️ No hay equipos disponibles ahora mismo.</div>`
+            :`<div class="esel" id="esel">
+              ${disp.map(e=>`
+                <label class="eci" id="lbl-${e.id}">
+                  <input type="checkbox" value="${e.id}" onchange="togEci('${e.id}')"/>
+                  <span style="font-size:18px">${ico(e.tipo)}</span>
+                  <span><div class="ein">${e.nombre}</div><div class="eii">${e.id}</div></span>
+                </label>`).join('')}
+            </div>`}
+        </div>
+        <div class="fr"><label>Fecha y hora</label><input id="ff" type="datetime-local"/></div>
+        <div class="fr"><label>Observaciones (opcional)</label><textarea id="fob" placeholder="Alguna aclaración..."></textarea></div>
+        <button class="bsub" onclick="enviarPedido()">Enviar solicitud</button>
+      </div>`;
+    setTimeout(()=>{
+      const fe=document.getElementById('ff');
+      if(!fe)return;
+      const now=new Date();
+      now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+      fe.value=now.toISOString().slice(0,16);
+    },0);
+  },
+
+  reportar(el){
+    el.innerHTML=`
+      <div class="stitle">Reportar Fallo</div>
+      <div class="ssub">Informá un problema técnico. El bibliotecario revisará y cambiará el estado del equipo.</div>
+      <div class="fcard">
+        <h3>Formulario de reporte</h3>
+        <div class="fr"><label>Tu nombre</label><input id="rn" type="text" placeholder="Nombre del docente"/></div>
+        <div class="fr">
+          <label>Equipo con fallo</label>
+          <select id="req" onchange="actualizarFallos()">
+            <option value="">— Seleccioná el equipo —</option>
+            ${DATA.equipos.map(e=>`<option value="${e.id}" data-tipo="${e.tipo}">${e.nombre} (${e.tipo})</option>`).join('')}
+          </select>
+        </div>
+        <div class="fr">
+          <label>Tipo de problema</label>
+          <select id="rtip">
+            <option value="">— Primero seleccioná un equipo —</option>
+          </select>
+        </div>
+        <div class="fr"><label>Descripción</label><textarea id="rdesc" placeholder="Describí el fallo con detalle..."></textarea></div>
+        <button class="bsub" onclick="enviarReporte()">Enviar reporte</button>
+      </div>`;
+  },
+
+  historial(el){
+    const mios=DATA.pedidos.filter(p=>p.usuario===currentUser.username).slice().reverse();
+    el.innerHTML=`<div class="stitle">Mis Pedidos</div><div class="ssub">Historial de tus solicitudes y su estado.</div>`;
+    if(!mios.length){
+      el.innerHTML+=`<div class="empty"><div class="ei">📭</div><p>Todavía no hiciste ningún pedido.</p></div>`;
+      return;
+    }
+    const cls={pendiente:'ep',aceptado:'ea',rechazado:'er',entregado:'ee'};
+    el.innerHTML+=`<div class="hlist">
+      ${mios.map(p=>`
+        <div class="hcard ${cls[p.estado]||''}">
+          <div class="hctop">
+            <div>
+              <div class="hceqs">${p.equiposNombres.join(', ')}</div>
+              <div class="hcmeta">Aula: ${p.aula} &nbsp;·&nbsp; ${fmt(p.fecha)}</div>
+            </div>
+            ${bped(p.estado)}
+          </div>
+          ${p.obs?`<div class="hcobs">"${p.obs}"</div>`:''}
+        </div>`).join('')}
+    </div>`;
+  },
+
+  pedidos(el){
+    el.innerHTML=`
+      <div class="stitle">Pedidos Recibidos</div>
+      <div class="ssub">Gestioná las solicitudes de los docentes.</div>`;
+    const tw=document.createElement('div');
+    tw.className='tw';
+    el.appendChild(tw);
+    renderPedidos(tw);
+  },
+
+  reportes(el){
+    el.innerHTML=`
+      <div class="stitle">Reportes de Fallos</div>
+      <div class="ssub">Fallos reportados por los docentes. Cambiá el estado en "Gestión de equipos".</div>`;
+    const tw=document.createElement('div');
+    tw.className='tw';
+    el.appendChild(tw);
+    renderReportes(tw);
+  },
+
+  equipos(el){
+    const s=stats();
+    el.innerHTML=`
+      <div class="stitle">Gestión de Equipos</div>
+      <div class="ssub">Cambiá el estado de cada equipo y agregá nuevos.</div>
+      <div class="stats">
+        <div class="sc"><div class="num">${s.total}</div><div class="lbl">Total</div></div>
+        <div class="sc"><div class="num">${s.disp}</div><div class="lbl">Disponibles</div></div>
+        <div class="sc"><div class="num">${s.ocup}</div><div class="lbl">En uso</div></div>
+        <div class="sc"><div class="num">${s.fall}</div><div class="lbl">Con fallo</div></div>
+      </div>
+      <div class="egrid">
+        ${DATA.equipos.map(e=>`
+          <div class="ecard">
+            <div class="eico">${ico(e.tipo)}</div>
+            <div class="ename">${e.nombre}</div>
+            <div class="eid">${e.id} · ${e.tipo}</div>
+            ${beq(e.estado)}
+            <div class="eact">
+              <button class="bsm ${e.estado==='disponible'?'act':''}" onclick="cambiarEstado('${e.id}','disponible')">Disponible</button>
+              <button class="bsm ${e.estado==='ocupado'?'act':''}"    onclick="cambiarEstado('${e.id}','ocupado')">En uso</button>
+              <button class="bsm ${e.estado==='fallo'?'act':''}"      onclick="cambiarEstado('${e.id}','fallo')">Fallo</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:40px">
+        <div class="stitle" style="font-size:20px;margin-bottom:4px">Agregar nuevo equipo</div>
+        <div class="ssub">Registrá una notebook o tablero.</div>
+        <div class="fcard">
+          <h3>Nuevo equipo</h3>
+          <div class="fr"><label>Tipo</label>
+            <select id="net"><option value="">— Seleccioná —</option><option value="notebook">Notebook</option><option value="tablero">Tablero</option></select>
+          </div>
+          <div class="fr"><label>Nombre</label><input id="nen" type="text" placeholder="Ej: Notebook 06"/></div>
+          <div class="fr"><label>ID / Código</label><input id="nei" type="text" placeholder="Ej: NB-06"/></div>
+          <button class="bsub" onclick="agregarEquipo()">Agregar equipo</button>
+        </div>
+      </div>`;
+  }
+};
+
+// Actualiza las opciones de tipo de fallo según el equipo seleccionado
+function actualizarFallos(){
+  const sel = document.getElementById('req');
+  const opt = sel.options[sel.selectedIndex];
+  const tipo = opt ? opt.getAttribute('data-tipo') : '';
+  const rtip = document.getElementById('rtip');
+  if(!tipo){
+    rtip.innerHTML='<option value="">— Primero seleccioná un equipo —</option>';
+    return;
+  }
+  const lista = FALLOS[tipo] || [];
+  rtip.innerHTML = '<option value="">— Seleccioná el tipo —</option>' +
+    lista.map(f=>`<option>${f}</option>`).join('');
+}
+
+function togEci(id){
+  const lbl=document.getElementById('lbl-'+id);
+  if(lbl)lbl.classList.toggle('sel',lbl.querySelector('input').checked);
+}
+
+function enviarPedido(){
+  const nombre=document.getElementById('fn').value.trim();
+  const aula  =document.getElementById('fa').value.trim();
+  const fecha =document.getElementById('ff').value;
+  const obs   =document.getElementById('fob').value.trim();
+  const checks=document.querySelectorAll('#esel input:checked');
+  const ids   =Array.from(checks).map(c=>c.value);
+
+  if(!nombre){toast('⚠️ Ingresá tu nombre.');return}
+  if(!aula)  {toast('⚠️ Ingresá el aula.');return}
+  if(!fecha) {toast('⚠️ Seleccioná fecha y hora.');return}
+  if(!ids.length){toast('⚠️ Seleccioná al menos un equipo.');return}
+
+  const eqs=ids.map(id=>DATA.equipos.find(e=>e.id===id)).filter(Boolean);
+
+  DATA.pedidos.push({
+    id:Date.now(),
+    usuario:currentUser.username,
+    nombre,aula,
+    equiposIds:ids,
+    equiposNombres:eqs.map(e=>e.nombre),
+    fecha,obs,
+    estado:'pendiente'
+  });
+
+  eqs.forEach(eq=>{eq.estado='ocupado'});
+  toast('✅ Pedido enviado.');
+  showPanel('historial');
+}
+
+function enviarReporte(){
+  const nombre=document.getElementById('rn').value.trim();
+  const eqId  =document.getElementById('req').value;
+  const tipo  =document.getElementById('rtip').value;
+  const desc  =document.getElementById('rdesc').value.trim();
+
+  if(!nombre){toast('⚠️ Ingresá tu nombre.');return}
+  if(!eqId)  {toast('⚠️ Seleccioná un equipo.');return}
+  if(!tipo)  {toast('⚠️ Seleccioná el tipo de problema.');return}
+  if(!desc)  {toast('⚠️ Describí el problema.');return}
+
+  const eq=DATA.equipos.find(e=>e.id===eqId);
+
+  DATA.reportes.push({
+    id:Date.now(),
+    usuario:currentUser.username,
+    nombre,
+    equipoId:eqId,
+    equipoNombre:eq?eq.nombre:eqId,
+    tipo,desc
+  });
+
+  toast('✅ Reporte enviado.');
+  showPanel('disponibilidad');
+}
+
+function cambiarEstado(id,nuevoEstado){
+  const eq=DATA.equipos.find(e=>e.id===id);
+  if(!eq)return;
+  eq.estado=nuevoEstado;
+  const l={disponible:'Disponible',ocupado:'En uso',fallo:'Con fallo'};
+  toast('🔄 '+eq.nombre+' → '+l[nuevoEstado]);
+  showPanel('equipos');
+}
+
+function agregarEquipo(){
+  const tipo  =document.getElementById('net').value;
+  const nombre=document.getElementById('nen').value.trim();
+  const id    =document.getElementById('nei').value.trim().toUpperCase();
+  if(!tipo||!nombre||!id){toast('⚠️ Completá todos los campos.');return}
+  if(DATA.equipos.find(e=>e.id===id)){toast('⚠️ Ya existe ese ID.');return}
+  DATA.equipos.push({id,tipo,nombre,estado:'disponible'});
+  toast('✅ "'+nombre+'" agregado.');
+  showPanel('equipos');
+}
+
+function accionPedido(id,accion){
+  const p=DATA.pedidos.find(x=>x.id===id);
+  if(!p)return;
+  if(accion==='aceptar'){
+    p.estado='aceptado';
+    toast('✅ Pedido aceptado.');
+  } else if(accion==='entregar'){
+    p.estado='entregado';
+    toast('📦 Marcado como entregado.');
+  } else if(accion==='rechazar'){
+    p.estado='rechazado';
+    p.equiposIds.forEach(eid=>{
+      const eq=DATA.equipos.find(e=>e.id===eid);
+      if(eq)eq.estado='disponible';
+    });
+    toast('❌ Pedido rechazado. Equipos liberados.');
+  }
+  const tw=document.querySelector('.tw');
+  if(tw)renderPedidos(tw);
+}
+
+function renderPedidos(tw){
+  const list=DATA.pedidos.slice().reverse();
+  if(!list.length){
+    tw.innerHTML=`<div class="empty"><div class="ei">📭</div><p>No hay pedidos todavía.</p></div>`;
+    return;
+  }
+  tw.innerHTML=`<table>
+    <thead><tr><th>Docente</th><th>Aula</th><th>Equipos</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>
+    ${list.map(p=>`
+      <tr>
+        <td>${p.nombre}</td>
+        <td>${p.aula}</td>
+        <td>
+          ${p.equiposNombres.map(n=>`<div>${n}</div>`).join('')}
+          ${p.obs?`<div class="tsub">"${p.obs}"</div>`:''}
+        </td>
+        <td style="white-space:nowrap">${fmt(p.fecha)}</td>
+        <td>${bped(p.estado)}</td>
+        <td>
+          ${p.estado==='pendiente'?`<div class="ba2"><button class="bacc" onclick="accionPedido(${p.id},'aceptar')">Aceptar</button><button class="brej" onclick="accionPedido(${p.id},'rechazar')">Rechazar</button></div>`:''}
+          ${p.estado==='aceptado'?`<div class="ba2"><button class="bdel" onclick="accionPedido(${p.id},'entregar')">Marcar entregado</button><button class="brej" onclick="accionPedido(${p.id},'rechazar')">Cancelar</button></div>`:''}
+          ${p.estado==='entregado'||p.estado==='rechazado'?'<span style="color:var(--gray);font-size:12px">—</span>':''}
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function renderReportes(tw){
+  const list=DATA.reportes.slice().reverse();
+  if(!list.length){
+    tw.innerHTML=`<div class="empty"><div class="ei">✅</div><p>No hay reportes de fallos.</p></div>`;
+    return;
+  }
+  tw.innerHTML=`<table>
+    <thead><tr><th>Docente</th><th>Equipo</th><th>Tipo de fallo</th><th>Descripción</th></tr></thead>
+    <tbody>
+    ${list.map(r=>`
+      <tr>
+        <td>${r.nombre}</td>
+        <td>${r.equipoNombre}<div class="tsub">${r.equipoId}</div></td>
+        <td>${r.tipo}</td>
+        <td>${r.desc}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+}
+</script>
+</body>
+</html>

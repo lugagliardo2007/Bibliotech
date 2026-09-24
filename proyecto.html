@@ -169,15 +169,31 @@
       <h1>Bibliotech</h1>
       <p>Gestión de préstamos de equipos tecnológicos</p>
     </div>
-    <div class="lb">
-      <label>Usuario</label>
-      <input id="inp-u" type="text" placeholder="Ingresá tu usuario" autocomplete="off"/>
+    <div class="lb" id="lb-login">
+      <label>Usuario o email</label>
+      <input id="inp-u" type="text" placeholder="Ingresá tu usuario o email" autocomplete="off"/>
       <label>Contraseña</label>
       <input id="inp-p" type="password" placeholder="••••••••"/>
       <div id="lerr">❌ Usuario o contraseña incorrectos.</div>
       <button class="btn-login" onclick="doLogin()">Ingresar al sistema</button>
       <div class="hint">
-        Ingresá con tu usuario y contraseña de la base de datos.
+        ¿Sos docente y no tenés cuenta? <a href="#" onclick="toggleAuth('register');return false;">Creá una acá</a>.
+      </div>
+    </div>
+
+    <div class="lb" id="lb-register" style="display:none">
+      <label>Nombre completo</label>
+      <input id="reg-nombre" type="text" placeholder="Nombre y apellido" autocomplete="off"/>
+      <label>Email</label>
+      <input id="reg-email" type="email" placeholder="tu@email.com" autocomplete="off"/>
+      <label>Contraseña</label>
+      <input id="reg-pass" type="password" placeholder="Mínimo 6 caracteres"/>
+      <label>Confirmar contraseña</label>
+      <input id="reg-pass2" type="password" placeholder="Repetí la contraseña"/>
+      <div id="rerr" style="display:none;color:var(--red);font-size:12px;margin-top:-10px;margin-bottom:14px"></div>
+      <button class="btn-login" onclick="doRegister()">Crear cuenta de docente</button>
+      <div class="hint">
+        ¿Ya tenés cuenta? <a href="#" onclick="toggleAuth('login');return false;">Iniciá sesión</a>.
       </div>
     </div>
   </div>
@@ -228,12 +244,58 @@ async function doLogin() {
 document.getElementById('inp-p').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 document.getElementById('inp-u').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 
+function toggleAuth(which){
+  document.getElementById('lb-login').style.display    = which==='login'    ? 'block':'none';
+  document.getElementById('lb-register').style.display = which==='register'? 'block':'none';
+  document.getElementById('lerr').style.display='none';
+  document.getElementById('rerr').style.display='none';
+}
+
+/* ── REGISTRO (solo docentes) ── */
+async function doRegister(){
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const email  = document.getElementById('reg-email').value.trim();
+  const pass   = document.getElementById('reg-pass').value;
+  const pass2  = document.getElementById('reg-pass2').value;
+  const rerr   = document.getElementById('rerr');
+
+  const showErr = (msg) => { rerr.textContent = '❌ ' + msg; rerr.style.display = 'block'; };
+
+  if (!nombre || !email || !pass || !pass2) { showErr('Completá todos los campos.'); return; }
+  if (!/^\S+@\S+\.\S+$/.test(email))        { showErr('Ingresá un email válido.'); return; }
+  if (pass.length < 6)                      { showErr('La contraseña debe tener al menos 6 caracteres.'); return; }
+  if (pass !== pass2)                       { showErr('Las contraseñas no coinciden.'); return; }
+
+  const res = await fetch('/api/registrar', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ nombre, email, pass })
+  });
+  const data = await res.json();
+
+  if (data.ok) {
+    rerr.style.display='none';
+    currentUser = { id: data.id, username: email, name: data.nombre, role: 'docente' };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    toast('✅ Cuenta creada. ¡Bienvenido/a!');
+    applyRole();
+  } else {
+    showErr(data.error || 'No se pudo crear la cuenta.');
+  }
+}
+
 function doLogout(){
   currentUser=null;
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
   document.getElementById('inp-p').value='';
   document.getElementById('inp-u').value='';
+  document.getElementById('reg-nombre').value='';
+  document.getElementById('reg-email').value='';
+  document.getElementById('reg-pass').value='';
+  document.getElementById('reg-pass2').value='';
+  toggleAuth('login');
 }
 
 function applyRole(){
